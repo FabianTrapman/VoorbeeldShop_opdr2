@@ -1,16 +1,25 @@
 import psycopg2
 from pymongo import MongoClient
+import pymongo
 
-dataset = {'profile': {'_id': 'varchar(10) PRIMARY KEY', 'recommendable':'varchar(10)',
-                        'sessionprofile_id': 'varchar(50)'},
+'''
+Handige dingen om op te slaan
+postgres_connection_list = ['localhost', 'oefen_webshop2', 'postgres', 'pgadmin2', '5432']
+fetch_products = ['products', 'localhost', 27017, 'huwebshop']
 
-           'product': {'_id': 'varchar(50) PRIMARY KEY', "price": "VARCHAR(255)",
+
+'''
+
+dataset = {'visitors': {'_id': 'varchar(100) PRIMARY KEY', 'recommendable':'varchar(100)',
+                        'sessionprofile_id': 'varchar(100)'},
+
+           'products': {'_id': 'varchar(50) PRIMARY KEY', "price": "VARCHAR(255)",
                        'name': 'VARCHAR(255)',  'flavor': 'VARCHAR(255)',
                        'category': 'VARCHAR(255)', 'sub_category': 'VARCHAR(255)', 'sub_sub_category': 'VARCHAR(255)',
                        'sub_sub_sub_category': 'VARCHAR(255)', 'herhaalaankopen': 'boolean',
                        'recommendable': 'boolean', "brand": "VARCHAR(255)"},
 
-           'event': {'profile_id': 'varchar(50) PRIMARY KEY', 'date': 'varchar(255)', 'source': 'varchar(255)',
+           'sessions': {'profile_id': 'varchar(50) PRIMARY KEY', 'date': 'varchar(255)', 'source': 'varchar(255)',
                      'action': 'varchar(255)', 'pagetype': 'varchar(255)', 'product': 'varchar(255)',
                      'time_on_page': 'int4', 'max_time_inactive': 'int4', 'click_count': 'int4',
                      'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4'},
@@ -38,34 +47,38 @@ def connection_mongo(host, port, database):
 
     return db
 
-def fetch_json_mongo(folder, host, port, database, dataset):
+def fetch_json_mongo(mongo_connection, dataset):
     '''
     Uses the connection_mongo function to access Json data located in your mongoDB
 
     :param folder: The folder where the desired Json data is located
     :return: A neat organized list with data
+
+    RETURN DATA STRUCTURE
+        [{'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES'},
+         {'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES'},
+         {'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES'}]
     '''
+
+    folder = mongo_connection[0]
+    host = mongo_connection[1]
+    port = mongo_connection[2]
+    database = mongo_connection[3]
 
     section = {}
 
     # Establishes a connection with your database
     db = connection_mongo(host, port, database)
 
-    # The folder parameter decides which type of data gets accessed
-    if folder == 'products':
-        section = db.products
-        insert_list = list(dataset['product'].keys())
-    elif folder == 'sessions':
-        section = db.sessions
-        insert_list = list(dataset['event'].keys())
-    elif folder == 'visitors':
-        section = db.visitors
-        insert_list = list(dataset['profile'].keys())
+    section = db[folder]
+    insert_list = list(dataset[folder].keys())
 
     return_data = {}
     return_data_final = []
 
     for value in section.find():
+        return_data = {}
+
         for value_sub in value:
 
             if value_sub == 'events':
@@ -77,12 +90,25 @@ def fetch_json_mongo(folder, host, port, database, dataset):
             if value_sub in insert_list:
                 if value_sub == 'price':
                     return_data[value_sub] = value[value_sub]['selling_price']
+                elif value[value_sub] is None:
+                    return_data[value_sub] = '-1'
                 else:
                     return_data[value_sub] = value[value_sub]
 
         return_data_final.append(return_data)
 
     return return_data_final
+
+def type_json_mongo(data, folder):
+    '''
+    In order to insert the data in to your PostgresDB
+    it's valie types need to correspond to the column types.
+    This function edits it's values to make sure there aren't any errors while inserting.
+
+    :param data: The return data from fetch_json_mongo
+    :param folder: The folder from which you imported the data
+    :return:
+    '''
 
 def connection_postgres(host, database, user, pw, port):
     '''
@@ -100,7 +126,7 @@ def connection_postgres(host, database, user, pw, port):
 
 def table_postgres(data, connection_list):
     '''
-    Takes data from the dictionary and puts them in to a postgresQL database
+    Takes structure from the dictionary and puts them in to a postgresQL database
 
     :param data:
     :param connection_list: Takes a list for the connection_postgres function
@@ -130,14 +156,21 @@ def table_postgres(data, connection_list):
 
         cur.execute(query)
 
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def insert_postgres(table_name, insert_data, connection_list):
     '''
     Takes data from the dictionary and puts them in to a postgresQL database
 
     :param table_name: The name of the table you'd like to add data to
-    insert_data: A dictionary consisting of columns as keys and values as values
+    :param insert_data: A dictionary consisting of columns as keys and values as values
     :param connection_list: Takes a list for the connection_postgres function
                             structured as followed, [host, database, user, pw, port]
+
+    INSERT DATA STRUCTURE
+        {'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES'}
     '''
 
     conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
@@ -145,13 +178,38 @@ def insert_postgres(table_name, insert_data, connection_list):
 
     cur = conn.cursor()
 
-    query = f'''INSERT INTO {table_name}({list(insert_data.keys)})
-                VALUES ({list(insert_data.values)})'''
+    for line in insert_data:
+        dict(line)
 
-    cur.execute(query)
+        keys = list(line.keys())
+        separator = ", "
+        skeys = separator.join(keys)
+
+        values = list(line.values())
+        svalues = []
 
 
-products = fetch_json_mongo('visitors', 'localhost', 27017, 'huwebshop', dataset)
 
-for doc in products.find():
-    print(doc)
+        for i in values:
+            var = i
+            if type(i) == str:
+                var = i.replace("\'", ' ')
+            elif type(i) == list:
+                for i2 in i:
+                    var = i2.replace("\'", '')
+
+            svalues.append(var)
+
+        svalues = str(svalues).strip('[').strip(']')
+        svalues = str(svalues).strip('"')
+
+
+        query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')
+VALUES (''' + str(svalues) + ''');''')
+
+        print(query)
+        cur.execute(query)
+
+    conn.commit()
+    cur.close()
+    conn.close()

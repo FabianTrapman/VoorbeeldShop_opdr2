@@ -1,12 +1,7 @@
 import psycopg2
 from pymongo import MongoClient
 
-'''
-Handige dingen om op te slaan
-postgres_connection_list = ['localhost', 'oefen_webshop2', 'postgres', 'pgadmin2', '5432']
-fetch_products = ['products', 'localhost', 27017, 'huwebshop']
-'''
-
+# A dictionary to make the table_postgres function run more smoothly
 dataset = {'visitors': {'_id': 'varchar(100) PRIMARY KEY', 'recommendable': 'varchar(100)',
                         'sessionprofile_id': 'varchar(100)'},
 
@@ -16,10 +11,10 @@ dataset = {'visitors': {'_id': 'varchar(100) PRIMARY KEY', 'recommendable': 'var
                         'sub_sub_sub_category': 'VARCHAR(255)', 'herhaalaankopen': 'boolean',
                         'recommendable': 'boolean', "brand": "VARCHAR(255)"},
 
-           'sessions': {'profile_id': 'varchar(50) PRIMARY KEY', 'date': 'varchar(255)', 'source': 'varchar(255)',
+           'sessions': {'t': 'varchar(255)', 'source': 'varchar(255)',
                         'action': 'varchar(255)', 'pagetype': 'varchar(255)', 'product': 'varchar(255)',
                         'time_on_page': 'int4', 'max_time_inactive': 'int4', 'click_count': 'int4',
-                        'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4'},
+                        'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4', 'buid': 'varchar(255)'},
 
            'BUIDS': {'_id': 'varchar(50)', 'buids': 'varchar(50)'}
            }
@@ -59,44 +54,71 @@ def fetch_json_mongo(mongo_connection, dataset):
          {'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES', 'COLUMNS': 'VALUES'}]
     '''
 
+    # Establishes a connection with your database
     folder = mongo_connection[0]
     host = mongo_connection[1]
     port = mongo_connection[2]
     database = mongo_connection[3]
-
-    # Establishes a connection with your database
     db = connection_mongo(host, port, database)
-
     section = db[folder]
+
+    # The mongoDB has many attributes, this list will make sure that
+    # we only extract the attributes that we need, using an if statement
     insert_list = list(dataset[folder].keys())
 
+    # All extracted data dictionaries will be added to this list
     return_data_final = []
 
+    # when testing a small amount of data is inserted
+    # teller = 0
+
+    # Looping through mongoDB data
     for value in section.find():
+
+        # when testing
+        # teller += 1
+        # if teller == 10:
+        #     break
+
+        # For every instance a new data dictionary is made
         return_data = {}
 
+        # Looping through mongoDB data keys
         for value_sub in value:
 
+            # The line's buid gets added
+            try:
+                buid_data = value['buid'][0]
+            except:
+                'niks'
+
+            # Since the events object is a nested dictionary
+            # we need to loop through it seperately
             if value_sub == 'events':
 
                 for i in range(len(value['events'])):
                     return_data1 = dict(value['events'][i-1])
+                    return_data1['buid'] = buid_data
                     return_data_final.append(return_data1)
 
+            # Line 65, 66
             if value_sub in insert_list:
 
+                # Since the price object is a nested dictionary
                 if value_sub == 'price':
                     return_data[value_sub] = value[value_sub]['selling_price']
 
+                # If any data is missing, a '-1' will take it's place
                 elif value[value_sub] is None:
                     return_data[value_sub] = '-1'
 
+                # Most data then gets put in as 'COLUMNS': 'VALUES'
                 else:
                     return_data[value_sub] = value[value_sub]
 
         print(return_data)
         return_data_final.append(return_data)
-
+    print(return_data_final)
     return return_data_final
 
 def fetch_query_BUIDS(mongo_connection, postgres_connection):
@@ -108,25 +130,22 @@ def fetch_query_BUIDS(mongo_connection, postgres_connection):
     :return:
     '''
 
+    # Establishes a connection with your database
     folder = 'visitors'
     host = mongo_connection[1]
     port = mongo_connection[2]
     database = mongo_connection[3]
-
-    # Establishes a connection with your database
     db = connection_mongo(host, port, database)
-
     section = db[folder]
 
     buids_dict = {}
 
     for line in section.find():
-        print(line)
         try:
             for buid in line['buids']:
                 val = str(line['_id'])
                 val2 = val.replace("'", '')
-                buids_dict[buid] = val2
+                buids_dict[buid] = val
         except:
             'dan niet'
 
@@ -146,7 +165,7 @@ def fetch_query_BUIDS(mongo_connection, postgres_connection):
 
         # Data gets inserted
         query = (f'''INSERT INTO BUIDS (buids, _id)
-VALUES (''' + keys[i-1] + ''', ''' + values[i-1] + ''');''')
+VALUES (\'''''' + keys[i-1] + '''\', \'''' + values[i-1] + '''\');''')
 
         print(query)
         cur.execute(query)
@@ -218,11 +237,9 @@ def type_json_mongo(data, folder):
     :return: A neater version of data
     '''
 
-    svalues = ''
+    svalues = []
 
     if folder == 'products':
-
-        svalues = []
 
         for i in data:
             var = i
@@ -239,14 +256,19 @@ def type_json_mongo(data, folder):
 
     elif folder == 'visitors':
 
-        svalues = []
-        print(data)
-        for i in data:
-            print(data)
-            # var = str(i[0])
-            # svalues.append(var)
-
         svalues = str(svalues).replace('"', '\'')
+
+    elif folder == 'sessions':
+        for val in data:
+            if val == None:
+                svalues.append(-1)
+            else:
+                svalues.append(val)
+
+        svalues[0] = str(svalues[0])
+
+        svalues = str(svalues).strip('[').strip(']')
+
 
     return svalues
 
@@ -276,23 +298,24 @@ def insert_postgres(table_name, insert_data, connection_list):
 
         # The keys act as column names, query line 1
         keys = list(line.keys())
-        separator = ", "
-        skeys = separator.join(keys)
+        if len(keys) != 1:
+            separator = ", "
+            skeys = separator.join(keys)
 
-        # It's values act as values, query line 2
-        values = list(line.values())
-        svalues = type_json_mongo(values, table_name)
-        print(svalues)
+            # It's values act as values, query line 2
+            values = list(line.values())
+            svalues = type_json_mongo(values, table_name)
+            print(svalues)
+            print(len(svalues))
 
-        # Data gets inserted
-        query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')
-VALUES (''' + str(svalues) + ''');''')
+            # Data gets inserted
+            query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')
+    VALUES (''' + str(svalues) + ''');''')
 
-        print(query)
-        cur.execute(query)
+            print(query)
+            cur.execute(query)
 
     # When all id's are query'd, they get commited
     conn.commit()
     cur.close()
     conn.close()
-

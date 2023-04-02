@@ -22,7 +22,7 @@ dataset = {'visitors': {'_id': 'varchar(100) PRIMARY KEY', 'recommendable': 'var
 
 def connection_mongo(host, port, database):
     '''
-    Establishes a connection with the desired MongoDB database
+    Establishes  a connection with the desired MongoDB database
 
     All parameters need to be correct and correspond with the mongoDB for it to work
     :param host: The host in wich you have your desired database located (usually localhost)

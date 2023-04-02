@@ -4,7 +4,7 @@ print('- products\n'
       '- visitors\n'
       '- sessions\n'
       '- BUIDS')
-folder = input('Welke folder wil je overzetten naar je database?: ')
+folder = input('Welke  folder wil je overzetten naar je database?: ')
 
 # De tabellen worden gemaakt in de postgresQL database
 postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']

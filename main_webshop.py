@@ -2,7 +2,7 @@ import psycopg2
 from pymongo import MongoClient
 
 '''
-Handige dingen om op te slaan
+Handige dingen om op te slaan 
 postgres_connection_list = ['localhost', 'oefen_webshop2', 'postgres', 'pgadmin2', '5432']
 fetch_products = ['products', 'localhost', 27017, 'huwebshop']
 '''

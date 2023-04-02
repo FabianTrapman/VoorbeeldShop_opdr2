@@ -72,11 +72,14 @@ def fetch_json_mongo(mongo_connection, dataset):
 
     return_data_final = []
 
+    # Every line of data gets checked for the right attributes
+    # because some of the data is not important for our goals
     for value in section.find():
         return_data = {}
 
         for value_sub in value:
 
+            # The attributes that we need for sessions is a nested dictionary
             if value_sub == 'events':
 
                 for i in range(len(value['events'])):
@@ -85,12 +88,15 @@ def fetch_json_mongo(mongo_connection, dataset):
 
             if value_sub in insert_list:
 
+                # The price attribute is also nested
                 if value_sub == 'price':
                     return_data[value_sub] = value[value_sub]['selling_price']
 
+                # Some attributes might be missing, we replace it with a '-1'
                 elif value[value_sub] is None:
                     return_data[value_sub] = '-1'
 
+                # Most data needs no special treatment an will be passed on here
                 else:
                     return_data[value_sub] = value[value_sub]
 
@@ -240,11 +246,9 @@ def type_json_mongo(data, folder):
     elif folder == 'visitors':
 
         svalues = []
-        print(data)
         for i in data:
-            print(data)
-            # var = str(i[0])
-            # svalues.append(var)
+            var = str(i[0])
+            svalues.append(var)
 
         svalues = str(svalues).replace('"', '\'')
 
@@ -295,4 +299,3 @@ VALUES (''' + str(svalues) + ''');''')
     conn.commit()
     cur.close()
     conn.close()
-

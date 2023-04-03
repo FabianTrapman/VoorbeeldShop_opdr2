@@ -27,7 +27,7 @@ def connection_mongo(host, port, database):
     All parameters need to be correct and correspond with the mongoDB for it to work
     :param host: The host in wich you have your desired database located (usually localhost)
     :param port: The port that corresponds to the host
-    :param database: The database that you'd like to access within the host
+    :param database: The database  that you'd like to access within the host
     :return: Connection with the database
     '''
 

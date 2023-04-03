@@ -8,7 +8,7 @@ folder = input('Welke  folder wil je overzetten naar je database?: ')
 
 # De tabellen worden gemaakt in de postgresQL database
 postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
-# table_postgres(dataset, postgres_lijst)
+# table_postgres(dat aset, postgres_lijst)
 
 # De data wordt uit de Mong oDB gehaald als Json, en de benodigde data wordt
 # er uit gefilterd en netjes weergegeven in een lijst met dictionary's

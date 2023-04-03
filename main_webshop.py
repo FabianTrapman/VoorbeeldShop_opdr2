@@ -16,7 +16,7 @@ dataset = {'visitors': {'_id': 'varchar(100) PRIMARY KEY', 'recommendable': 'var
                         'time_on_page': 'int4', 'max_time_inactive': 'int4', 'click_count': 'int4',
                         'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4', 'buid': 'varchar(255)'},
 
-           'BUIDS': {'_id': 'varchar(50)', 'buids': 'varchar(50)'}
+           'BUIDS': {'_id': 'varchar(500)', 'buids': 'varchar(500)'}
            }
 
 
@@ -298,7 +298,9 @@ def insert_postgres(table_name, insert_data, connection_list):
 
         # The keys act as column names, query line 1
         keys = list(line.keys())
-        if len(keys) != 1:
+        if len(keys) == 1:
+            return
+        else:
             separator = ", "
             skeys = separator.join(keys)
 
@@ -310,12 +312,13 @@ def insert_postgres(table_name, insert_data, connection_list):
 
             # Data gets inserted
             query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')
-    VALUES (''' + str(svalues) + ''');''')
+VALUES (''' + str(svalues) + ''');''')
 
             print(query)
             cur.execute(query)
+            conn.commit()
 
     # When all id's are query'd, they get commited
-    conn.commit()
+    print(' werkt')
     cur.close()
     conn.close()

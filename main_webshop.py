@@ -116,15 +116,15 @@ def fetch_json_mongo(mongo_connection, dataset):
     return_data_final = []
 
     # when testing a small amount of data is inserted
-    teller = 0
+    # teller = 0
 
     # Looping through mongoDB data
     for value in section.find():
 
         # when testing
-        teller += 1
-        if teller == 10:
-            break
+        # teller += 1
+        # if teller == 10:
+        #     break
 
         # For every instance a new data dictionary is made
         return_data = {}

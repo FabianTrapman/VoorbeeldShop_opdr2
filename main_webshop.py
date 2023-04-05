@@ -1,7 +1,7 @@
 import psycopg2
 from pymongo import MongoClient
 
-# A dictionary to make the table_postgres function run more smoothly
+# A dictionary to make  the table_postgres function run more smoothly
 dataset = {'visitors': {'_id': 'varchar(500)', 'recommendable': 'varchar(500)',
                         'sessionprofile_id': 'varchar(500)'},
 

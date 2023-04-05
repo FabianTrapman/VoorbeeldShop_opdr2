@@ -6,7 +6,7 @@ print('- products\n'
       '- BUIDS')
 folder = input('Welke folder wil je overzetten naar je database?: ')
 
-# De tabellen worden gemaakt in de postgresQL database
+# De tabellen wor den gemaakt in de postgresQL database
 postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
 table_postgres(dataset, postgres_lijst)
 

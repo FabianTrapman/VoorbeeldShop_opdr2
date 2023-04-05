@@ -2,23 +2,69 @@ import psycopg2
 from pymongo import MongoClient
 
 # A dictionary to make the table_postgres function run more smoothly
-dataset = {'visitors': {'_id': 'varchar(100) PRIMARY KEY', 'recommendable': 'varchar(100)',
-                        'sessionprofile_id': 'varchar(100)'},
+dataset = {'visitors': {'_id': 'varchar(500)', 'recommendable': 'varchar(500)',
+                        'sessionprofile_id': 'varchar(500)'},
 
-           'products': {'_id': 'varchar(50) PRIMARY KEY', "price": "VARCHAR(255)",
-                        'name': 'VARCHAR(255)',  'flavor': 'VARCHAR(255)',
-                        'category': 'VARCHAR(255)', 'sub_category': 'VARCHAR(255)', 'sub_sub_category': 'VARCHAR(255)',
-                        'sub_sub_sub_category': 'VARCHAR(255)', 'herhaalaankopen': 'boolean',
-                        'recommendable': 'boolean', "brand": "VARCHAR(255)"},
+           'products': {'_id': 'varchar(500)', "price": 'varchar(500)',
+                        'name': 'varchar(500)',  'flavor': 'varchar(500)',
+                        'category': 'varchar(500)', 'sub_category': 'varchar(500)', 'sub_sub_category': 'varchar(500)',
+                        'sub_sub_sub_category': 'varchar(500)', 'herhaalaankopen': 'varchar(500)',
+                        'recommendable': 'varchar(500)', "brand": 'varchar(500)'},
 
-           'sessions': {'t': 'varchar(255)', 'source': 'varchar(255)',
-                        'action': 'varchar(255)', 'pagetype': 'varchar(255)', 'product': 'varchar(255)',
+           'sessions': {'t': 'varchar(500)', 'source': 'varchar(500)',
+                        'action': 'varchar(500)', 'pagetype': 'varchar(500)', 'product': 'varchar(500)',
                         'time_on_page': 'int4', 'max_time_inactive': 'int4', 'click_count': 'int4',
-                        'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4', 'buid': 'varchar(255)'},
+                        'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4', 'buid': 'varchar(500)'},
 
-           'BUIDS': {'_id': 'varchar(500)', 'buids': 'varchar(500)'}
+           'BUIDS': {'_id': 'varchar(500)', 'buids': 'varchar(500)'},
+
+           'ordered_products': {'buid': 'varchar(500)', '_id': 'varchar(500)'}
            }
 
+
+def recursive_dict(data_design, data_fetched):
+    '''
+    This function takes the fetched data and assigns it to a new dictionary
+    Which makes it possible to make the insert_functions a lot smoother
+
+    :param data_design: {COLUMN: TYPE, COLUMN: TYPE, COLUMN: TYPE}
+    :param data_fetched: {COLUMN: VALUE, COLUMN: VALUE, COLUMN: VALUE}
+    :return: str(value with right type, value with right type)
+    '''
+
+    fetched_column = list(data_fetched.keys())
+    fetched_value = list(data_fetched.values())
+
+    edited_value = []
+    edited_type = []
+
+    length = len(fetched_column)
+
+    for i in range(length):
+
+        edited_value.append(fetched_value[i])
+        edited_type.append(data_design[fetched_column[i]])
+
+    string = ''
+
+    teller = 0
+
+    for i in edited_value:
+        var = i
+        teller += 1
+
+        if i is None:
+            string += '-1'
+        elif edited_type[edited_value.index(i)] == 'varchar(500)':
+            if type(i) is str or type(i) is list:
+                var = str(i).replace("\'", ' ')
+            string += f'\'{var}\''
+        elif edited_type[edited_value.index(i)] == 'int4':
+            string += f'{i}'
+
+        if teller != (len(edited_value)):
+            string += ','
+    return string
 
 def connection_mongo(host, port, database):
     '''
@@ -70,15 +116,15 @@ def fetch_json_mongo(mongo_connection, dataset):
     return_data_final = []
 
     # when testing a small amount of data is inserted
-    # teller = 0
+    teller = 0
 
     # Looping through mongoDB data
     for value in section.find():
 
         # when testing
-        # teller += 1
-        # if teller == 10:
-        #     break
+        teller += 1
+        if teller == 10:
+            break
 
         # For every instance a new data dictionary is made
         return_data = {}
@@ -226,53 +272,6 @@ def table_postgres(data, connection_list):
     conn.close()
 
 
-def type_json_mongo(data, folder):
-    '''
-    In order to insert the data in to your PostgresDB
-    it's valie types need to correspond to the column types.
-    This function edits its values to make sure there aren't any errors while inserting.
-
-    :param data: The return data from fetch_json_mongo
-    :param folder: The folder from which you imported the data
-    :return: A neater version of data
-    '''
-
-    svalues = []
-
-    if folder == 'products':
-
-        for i in data:
-            var = i
-            if type(i) == str:
-                var = i.replace("\'", ' ')
-            elif type(i) == list:
-                for i2 in i:
-                    var = i2.replace("\'", '')
-
-            svalues.append(var)
-
-        svalues = str(svalues).strip('[').strip(']')
-        svalues = str(svalues).strip('"')
-
-    elif folder == 'visitors':
-
-        svalues = str(svalues).replace('"', '\'')
-
-    elif folder == 'sessions':
-        for val in data:
-            if val == None:
-                svalues.append(-1)
-            else:
-                svalues.append(val)
-
-        svalues[0] = str(svalues[0])
-
-        svalues = str(svalues).strip('[').strip(']')
-
-
-    return svalues
-
-
 def insert_postgres(table_name, insert_data, connection_list):
     '''
     Takes data from the dictionary and puts them in to a postgresQL database
@@ -298,25 +297,20 @@ def insert_postgres(table_name, insert_data, connection_list):
 
         # The keys act as column names, query line 1
         keys = list(line.keys())
-        if len(keys) == 1:
-            return
-        else:
-            separator = ", "
-            skeys = separator.join(keys)
 
-            # It's values act as values, query line 2
-            values = list(line.values())
-            svalues = type_json_mongo(values, table_name)
-            print(svalues)
-            print(len(svalues))
+        insert_data2 = recursive_dict(dataset[table_name], line)
 
-            # Data gets inserted
-            query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')
-VALUES (''' + str(svalues) + ''');''')
+        separator = ", "
+        skeys = separator.join(keys)
 
-            print(query)
-            cur.execute(query)
-            conn.commit()
+
+        # Data gets inserted
+        query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')
+VALUES (''' + insert_data2 + ''');''')
+
+        print(query)
+        cur.execute(query)
+        conn.commit()
 
     # When all id's are query'd, they get commited
     print(' werkt')

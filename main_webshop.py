@@ -177,7 +177,7 @@ def fetch_query_BUIDS(mongo_connection, postgres_connection):
 
     :param mongo_connection: A list with mongoDB info
     :param buids_dict: A dictionary with
-    :return:
+    :return: inserts the data to the BUIDS table
     '''
 
     # Establishes a connection with your database
@@ -190,6 +190,9 @@ def fetch_query_BUIDS(mongo_connection, postgres_connection):
 
     buids_dict = {}
 
+
+    # All profile id's will be linked to one of their BUIDS
+    # Because the BUIDS are nested in the visitors data we fetch it by calling upon the dictionary at 'buids'
     for line in section.find():
         try:
             for buid in line['buids']:
@@ -227,7 +230,7 @@ VALUES (\'''''' + keys[i-1] + '''\', \'''' + values[i-1] + '''\');''')
 
 def fetch_query_properties(mongo_connection, postgres_connection):
     '''
-    Makes a dictionary with BUIDS as its key and the corresponding profile_id as value
+    Makes a dictionary with BUIDS as its key and the corresponding profile_id as value.
 
     :param mongo_connection: A list with mongoDB info
     :param buids_dict: A dictionary with
@@ -248,28 +251,31 @@ def fetch_query_properties(mongo_connection, postgres_connection):
 
     cur = conn.cursor()
 
+    # This list acts as a means to compare the products to each other, which we will need for our RE
     check = ['doelgroep', 'eenheid', 'gebruik', 'serie', 'soort', 'variant', 'type']
 
     total = []
 
+
+    # We check all data in products for their properties.
     for line in section.find():
 
+        # We start with linking it's product id to the properties
         properties_dict = {}
         properties_dict['_id'] = line['_id']
 
+        # Now we add all properties to the right product id
         try:
             properties_fetched = line['properties']
-
             for i in dict(properties_fetched):
                 if i in check:
-
                     if i is None:
                         properties_dict[i] = '-1'
                     else:
                         properties_dict[i] = line['properties'][i]
 
+        # When there are exceptions in the data, we assign a -1 to all properties
         except:
-
             properties_dict['doelgroep'] = '-1'
             properties_dict['eenheid'] = '-1'
             properties_dict['gebruik'] = '-1'
@@ -280,7 +286,8 @@ def fetch_query_properties(mongo_connection, postgres_connection):
 
         total.append(properties_dict)
 
-    print(total)
+    # Because the value types are listed in the dataset it can easily be passed on to insert postgres
+    # to prevent duplicated code
     insert_postgres('product_properties', total, postgres_connection)
 
 
@@ -313,11 +320,13 @@ def table_postgres(data, connection_list):
 
     cur = conn.cursor()
 
+    # The key of the nested dictionaries act as the table name
     for sub in data:
         query = ''''''
         query += 'CREATE TABLE ' + sub + ' ('
-        teller = 0
 
+        # The keys and its corresponding values get queried
+        teller = 0
         for sub_sub in data[sub]:
             teller += 1
             query += sub_sub + ' ' + data[sub][sub_sub]

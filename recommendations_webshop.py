@@ -212,5 +212,6 @@ def most_viewed_products(profile_id, connection_list):
     my_keys = sorted(clean_products, key=clean_products.get, reverse=True)[:3]
     print(my_keys)
     return my_keys
+
 print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 

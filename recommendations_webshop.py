@@ -4,8 +4,9 @@ from main_webshop import *
 import nltk
 import re
 from nltk.corpus import stopwords
-# from sklearn.feature_extraction.text import CountVectorizer
-# from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from collections import Counter
 
 '''
                                 ****************** Similair Products ******************
@@ -160,8 +161,8 @@ def similair_product(profile_id, connection_list):
 
 
 postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
-print(similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
-print(viewed_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+# print(similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+# print(viewed_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 
 '''
                                 ****************** most viewed products ******************
@@ -185,19 +186,35 @@ def most_viewed_products(profile_id, connection_list):
 
     cur = conn.cursor()
 
-    # The corresponding buid from the profile_id gets called upon
     query = f'''
-            SELECT buids
-            FROM BUIDS
-            WHERE _id = \'{profile_id}\';'''
+        SELECT product
+        FROM sessions;'''
 
-    # fetching buid
     cur.execute(query)
-    fetched_buid = cur.fetchone()[0]
+    fetched_product = cur.fetchall()
+
+    clean_products = []
 
     conn.commit()
     cur.close()
     conn.close()
+
+    for i in fetched_product:
+        if i != (None,) and i != ('-1',):
+            var = str(i)
+            var = var.strip('(')
+            var = var.strip(')')
+            var = var.strip(',')
+            var = var.strip('\'')
+            clean_products.append(var)
+
+    clean_products = Counter(clean_products)
+    my_keys = sorted(clean_products, key=clean_products.get, reverse=True)[:3]
+    print(my_keys)
+    return my_keys
+
+print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+
 
     viewed_product(profile_id, connection_list)
 

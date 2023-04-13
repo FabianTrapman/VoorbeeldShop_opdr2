@@ -227,7 +227,7 @@ print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 '''
 
 
-def vergelijkbare_prijs(profile_id, connection_list):
+def same_prize(profile_id, connection_list):
     conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
                                connection_list[3], connection_list[4])
 
@@ -263,3 +263,27 @@ def vergelijkbare_prijs(profile_id, connection_list):
                                 ****************** same brand products ******************
                                 ****************** same brand products ******************
 '''
+
+def same_brand(profile_id, connection_list):
+    conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
+                               connection_list[3], connection_list[4])
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM products WHERE _id='30131'")
+    main = cur.fetchone()
+
+    brand = main[10]
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM products WHERE brand =(%s)", (brand,))
+        products = cur.fetchall()
+        print("The number of products: ", cur.rowcount)
+        for product in products:
+            print(product)
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()

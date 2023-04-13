@@ -18,7 +18,8 @@ dataset = {'visitors': {'_id': 'varchar(500)', 'recommendable': 'varchar(500)',
            'sessions': {'t': 'varchar(500)', 'source': 'varchar(500)',
                         'action': 'varchar(500)', 'pagetype': 'varchar(500)', 'product': 'varchar(500)',
                         'time_on_page': 'int4', 'max_time_inactive': 'int4', 'click_count': 'int4',
-                        'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4', 'buid': 'varchar(500)'},
+                        'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4',
+                        'buid': 'varchar(500)'},
 
            'BUIDS': {'_id': 'varchar(500)', 'buids': 'varchar(500)'}
            }
@@ -69,6 +70,7 @@ def recursive_dict(data_design, data_fetched):
         if teller != (len(edited_value)):
             string += ','
     return string
+
 
 def connection_mongo(host, port, database):
     '''
@@ -139,6 +141,7 @@ def fetch_json_mongo(mongo_connection, dataset):
             # The line's buid gets added
             try:
                 buid_data = value['buid'][0]
+
             except:
                 'niks'
 
@@ -171,12 +174,12 @@ def fetch_json_mongo(mongo_connection, dataset):
     print(return_data_final)
     return return_data_final
 
+
 def fetch_query_BUIDS(mongo_connection, postgres_connection):
     '''
     Makes a dictionary with BUIDS as its key and the corresponding profile_id as value
 
     :param mongo_connection: A list with mongoDB info
-    :param buids_dict: A dictionary with
     :return: inserts the data to the BUIDS table
     '''
 
@@ -189,7 +192,6 @@ def fetch_query_BUIDS(mongo_connection, postgres_connection):
     section = db[folder]
 
     buids_dict = {}
-
 
     # All profile id's will be linked to one of their BUIDS
     # Because the BUIDS are nested in the visitors data we fetch it by calling upon the dictionary at 'buids'
@@ -228,6 +230,7 @@ VALUES (\'''''' + keys[i-1] + '''\', \'''' + values[i-1] + '''\');''')
     cur.close()
     conn.close()
 
+
 def fetch_query_properties(mongo_connection, postgres_connection):
     '''
     Makes a dictionary with BUIDS as its key and the corresponding profile_id as value.
@@ -245,17 +248,10 @@ def fetch_query_properties(mongo_connection, postgres_connection):
     db = connection_mongo(host, port, database)
     section = db[folder]
 
-    # A connection with the Database
-    conn = connection_postgres(postgres_connection[0], postgres_connection[1], postgres_connection[2],
-                               postgres_connection[3], postgres_connection[4])
-
-    cur = conn.cursor()
-
     # This list acts as a means to compare the products to each other, which we will need for our RE
     check = ['doelgroep', 'eenheid', 'gebruik', 'serie', 'soort', 'variant', 'type']
 
     total = []
-
 
     # We check all data in products for their properties.
     for line in section.find():
@@ -373,7 +369,6 @@ def insert_postgres(table_name, insert_data, connection_list):
 
         separator = ", "
         skeys = separator.join(keys)
-
 
         # Data gets inserted
         query = (f'''INSERT INTO ''' + table_name + ''' (''' + skeys + ''')

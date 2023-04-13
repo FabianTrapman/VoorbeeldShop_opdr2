@@ -1,9 +1,5 @@
-import psycopg2
-from pymongo import MongoClient
+
 from main_webshop import *
-import nltk
-import re
-from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import Counter
@@ -14,6 +10,7 @@ from collections import Counter
                                 ****************** Similair Products ******************
                                 ****************** Similair Products ******************
 '''
+
 
 def viewed_product(profile_id, connection_list):
     '''
@@ -79,8 +76,7 @@ def category_product(list_fetched, connection_list):
 
     cur = conn.cursor()
 
-
-    #Using an inner join on both the products and product_properties we get a neat line of data with the check
+    # Using an inner join on both the products and product_properties we get a neat line of data with the check
     # data we used in the main_webshop.py with it's corresponding product_id
     # check = ['doelgroep', 'eenheid', 'gebruik', 'serie', 'soort', 'variant', 'type']
     query = f'''
@@ -138,6 +134,7 @@ def category_product(list_fetched, connection_list):
     # Return the top 30 most similar products
     return final_list
 
+
 def similair_product(profile_id, connection_list):
     '''
     When a user opens the webshop it shows the most similair products
@@ -170,6 +167,7 @@ postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
                                 ****************** most viewed products ******************
                                 ****************** most viewed products ******************
 '''
+
 
 def most_viewed_products(profile_id, connection_list):
     '''
@@ -213,5 +211,5 @@ def most_viewed_products(profile_id, connection_list):
     print(my_keys)
     return my_keys
 
-print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 
+print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))

@@ -14,7 +14,7 @@ from sklearn.metrics.pairwise import cosine_similarity
                                 ****************** Similair Products ******************
 '''
 
-def bought_product(profile_id, connection_list):
+def viewed_product(profile_id, connection_list):
     '''
     Calls upon 2 queries to eventually get a profile's viewed products
 
@@ -79,7 +79,9 @@ def category_product(list_fetched, connection_list):
     cur = conn.cursor()
 
 
-    #
+    #Using an inner join on both the products and product_properties we get a neat line of data with the check
+    # data we used in the main_webshop.py with it's corresponding product_id
+    # check = ['doelgroep', 'eenheid', 'gebruik', 'serie', 'soort', 'variant', 'type']
     query = f'''
             select products._id, products.category, products.sub_category, products.sub_sub_category, product_properties.doelgroep, product_properties.soort, product_properties.variant
             from products
@@ -91,13 +93,13 @@ def category_product(list_fetched, connection_list):
 
     dictionary = {}
 
+    # In order to use the vectorization function we need a clean string with no comma's or other symbols
     for i in fetched_list:
         if '-1' in i or None in i:
             'niks'
         else:
             dictionary[i[0]] = i[0] + ' ' + i[1] + ' ' + i[2] + ' ' + i[3] + ' ' + i[4] + ' ' + i[5] + ' ' + i[6]
 
-    print(dictionary)
     dictionary_key = list(dictionary.keys())
     dictionary_value = list(dictionary.values())
 
@@ -154,10 +156,12 @@ def similair_product(profile_id, connection_list):
     :return: top 30 recommended items
     '''
 
-    return category_product(bought_product(profile_id, postgres_lijst), postgres_lijst)
+    return category_product(viewed_product(profile_id, postgres_lijst), postgres_lijst)
+
 
 postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
 print(similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+print(viewed_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 
 '''
                                 ****************** most viewed products ******************
@@ -166,3 +170,33 @@ print(similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
                                 ****************** most viewed products ******************
 '''
 
+def most_viewed_products(profile_id, connection_list):
+    '''
+    This function loops through all profiles in the database and keeps track of what products are most
+    viewed.
+
+    :param profile_id:
+    :param connection_list:
+    :return:
+    '''
+
+    conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
+                               connection_list[3], connection_list[4])
+
+    cur = conn.cursor()
+
+    # The corresponding buid from the profile_id gets called upon
+    query = f'''
+            SELECT buids
+            FROM BUIDS
+            WHERE _id = \'{profile_id}\';'''
+
+    # fetching buid
+    cur.execute(query)
+    fetched_buid = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    viewed_product(profile_id, connection_list)

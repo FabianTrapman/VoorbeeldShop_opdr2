@@ -4,8 +4,8 @@ from main_webshop import *
 import nltk
 import re
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+# from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.metrics.pairwise import cosine_similarity
 
 '''
                                 ****************** Similair Products ******************
@@ -200,3 +200,29 @@ def most_viewed_products(profile_id, connection_list):
     conn.close()
 
     viewed_product(profile_id, connection_list)
+
+
+def vergelijkbare_prijs(profile_id, connection_list):
+    print(viewed_product(profile_id, connection_list))
+
+    low_prijs = 100 - 50
+    high_prijs = 100 + 50
+    category = 'Eten & drinken'
+
+    conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
+                               connection_list[3], connection_list[4])
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM products WHERE (price BETWEEN (%s) AND (%s)) AND category=(%s)", (low_prijs, high_prijs, category))
+        products = cur.fetchall()
+        print("The number of products: ", cur.rowcount)
+        for product in products:
+            print(product)
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+vergelijkbare_prijs("5a09ca9ca56ac6edb447bd76", postgres_lijst)

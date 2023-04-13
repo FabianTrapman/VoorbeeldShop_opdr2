@@ -33,7 +33,8 @@ class Recom(Resource):
         through the API. It currently returns a random sample of products. """
         randcursor = database.products.aggregate([{ '$sample': { 'size': count } }])
         prodids = list(map(lambda x: x['_id'], list(randcursor)))
-        return prodids, 200
+        test = [27498, 7225, 29438, 8533]
+        return test, 200
 
 # This method binds the Recom class to the REST API, to parse specifically
 # requests in the format described below.

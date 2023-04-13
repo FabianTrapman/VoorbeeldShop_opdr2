@@ -5,20 +5,22 @@ from pymongo import MongoClient
 dataset = {'visitors': {'_id': 'varchar(500)', 'recommendable': 'varchar(500)',
                         'sessionprofile_id': 'varchar(500)'},
 
-           'products': {'_id': 'varchar(500)', "price": 'varchar(500)',
+           'products': {'_id': 'varchar(500)', "price": 'int4',
                         'name': 'varchar(500)',  'flavor': 'varchar(500)',
                         'category': 'varchar(500)', 'sub_category': 'varchar(500)', 'sub_sub_category': 'varchar(500)',
                         'sub_sub_sub_category': 'varchar(500)', 'herhaalaankopen': 'varchar(500)',
                         'recommendable': 'varchar(500)', "brand": 'varchar(500)'},
+
+           'product_properties': {'_id': 'varchar(500)', 'doelgroep': 'varchar(500)', 'eenheid': 'varchar(500)',
+                                  'gebruik': 'varchar(500)', 'serie': 'varchar(500)', 'soort': 'varchar(500)',
+                                  'variant': 'varchar(500)', 'type': 'varchar(500)'},
 
            'sessions': {'t': 'varchar(500)', 'source': 'varchar(500)',
                         'action': 'varchar(500)', 'pagetype': 'varchar(500)', 'product': 'varchar(500)',
                         'time_on_page': 'int4', 'max_time_inactive': 'int4', 'click_count': 'int4',
                         'elements_clicked': 'int4', 'scrolls_down': 'int4', 'scrolls_up': 'int4', 'buid': 'varchar(500)'},
 
-           'BUIDS': {'_id': 'varchar(500)', 'buids': 'varchar(500)'},
-
-           'ordered_products': {'buid': 'varchar(500)', '_id': 'varchar(500)'}
+           'BUIDS': {'_id': 'varchar(500)', 'buids': 'varchar(500)'}
            }
 
 
@@ -31,6 +33,8 @@ def recursive_dict(data_design, data_fetched):
     :param data_fetched: {COLUMN: VALUE, COLUMN: VALUE, COLUMN: VALUE}
     :return: str(value with right type, value with right type)
     '''
+
+    print(data_fetched)
 
     fetched_column = list(data_fetched.keys())
     fetched_value = list(data_fetched.values())
@@ -116,15 +120,15 @@ def fetch_json_mongo(mongo_connection, dataset):
     return_data_final = []
 
     # when testing a small amount of data is inserted
-    # teller = 0
+    teller = 0
 
     # Looping through mongoDB data
     for value in section.find():
 
         # when testing
-        # teller += 1
-        # if teller == 10:
-        #     break
+        teller += 1
+        if teller == 1000:
+            break
 
         # For every instance a new data dictionary is made
         return_data = {}
@@ -220,6 +224,64 @@ VALUES (\'''''' + keys[i-1] + '''\', \'''' + values[i-1] + '''\');''')
     conn.commit()
     cur.close()
     conn.close()
+
+def fetch_query_properties(mongo_connection, postgres_connection):
+    '''
+    Makes a dictionary with BUIDS as its key and the corresponding profile_id as value
+
+    :param mongo_connection: A list with mongoDB info
+    :param buids_dict: A dictionary with
+    :return:
+    '''
+
+    # Establishes a connection with your database
+    folder = 'products'
+    host = mongo_connection[1]
+    port = mongo_connection[2]
+    database = mongo_connection[3]
+    db = connection_mongo(host, port, database)
+    section = db[folder]
+
+    # A connection with the Database
+    conn = connection_postgres(postgres_connection[0], postgres_connection[1], postgres_connection[2],
+                               postgres_connection[3], postgres_connection[4])
+
+    cur = conn.cursor()
+
+    check = ['doelgroep', 'eenheid', 'gebruik', 'serie', 'soort', 'variant', 'type']
+
+    total = []
+
+    for line in section.find():
+
+        properties_dict = {}
+        properties_dict['_id'] = line['_id']
+
+        try:
+            properties_fetched = line['properties']
+
+            for i in dict(properties_fetched):
+                if i in check:
+
+                    if i is None:
+                        properties_dict[i] = '-1'
+                    else:
+                        properties_dict[i] = line['properties'][i]
+
+        except:
+
+            properties_dict['doelgroep'] = '-1'
+            properties_dict['eenheid'] = '-1'
+            properties_dict['gebruik'] = '-1'
+            properties_dict['serie'] = '-1'
+            properties_dict['soort'] = '-1'
+            properties_dict['variant'] = '-1'
+            properties_dict['type'] = '-1'
+
+        total.append(properties_dict)
+
+    print(total)
+    insert_postgres('product_properties', total, postgres_connection)
 
 
 def connection_postgres(host, database, user, pw, port):

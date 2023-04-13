@@ -3,6 +3,7 @@ from main_webshop import *
 print('- products\n'
       '- visitors\n'
       '- sessions\n'
+      '- product_properties\n'
       '- BUIDS')
 folder = input('Welke  folder wil je overzetten naar je database?: ')
 
@@ -15,6 +16,10 @@ postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
 if folder == 'BUIDS':
     mongo_lijst = ['visitors', 'localhost', 27017, 'huwebshop']
     fetch_query_BUIDS(mongo_lijst, postgres_lijst)
+
+elif folder == 'product_properties':
+    mongo_lijst = ['products', 'localhost', 27017, 'huwebshop']
+    fetch_query_properties(mongo_lijst, postgres_lijst)
 
 else:
     fetch_data = [folder, 'localhost', 27017, 'huwebshop']

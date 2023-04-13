@@ -202,15 +202,29 @@ def most_viewed_products(profile_id, connection_list):
     viewed_product(profile_id, connection_list)
 
 
+'''
+                                ****************** vergeijkbare_prijs ******************
+                                ****************** vergeijkbare_prijs ******************
+                                ****************** vergeijkbare_prijs ******************
+                                ****************** vergeijkbare_prijs ******************
+'''
+
+
 def vergelijkbare_prijs(profile_id, connection_list):
-    print(viewed_product(profile_id, connection_list))
-
-    low_prijs = 100 - 50
-    high_prijs = 100 + 50
-    category = 'Eten & drinken'
-
     conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
                                connection_list[3], connection_list[4])
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM products WHERE _id='30131'")
+    main = cur.fetchone()
+    print(main)
+
+    low_prijs = main[1] - 50
+    high_prijs = main[1] + 50
+    category = main[4]
+
+
+
     try:
         cur = conn.cursor()
         cur.execute("SELECT * FROM products WHERE (price BETWEEN (%s) AND (%s)) AND category=(%s)", (low_prijs, high_prijs, category))
@@ -225,4 +239,10 @@ def vergelijkbare_prijs(profile_id, connection_list):
         if conn is not None:
             conn.close()
 
-vergelijkbare_prijs("5a09ca9ca56ac6edb447bd76", postgres_lijst)
+
+'''
+                                ****************** same brand products ******************
+                                ****************** same brand products ******************
+                                ****************** same brand products ******************
+                                ****************** same brand products ******************
+'''

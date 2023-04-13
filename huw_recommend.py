@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, reqparse
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from recommendations_webshop import *
 
 app = Flask(__name__)
 api = Api(app)
@@ -33,8 +34,11 @@ class Recom(Resource):
         through the API. It currently returns a random sample of products. """
         randcursor = database.products.aggregate([{ '$sample': { 'size': count } }])
         prodids = list(map(lambda x: x['_id'], list(randcursor)))
-        test = [27498, 7225, 29438, 8533]
-        return test, 200
+        regel_een = similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst)
+        regel_twee = most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst)
+        # regel_drie = vergelijkbare_prijs("5a09ca9ca56ac6edb447bd76", postgres_lijst)
+
+        return [regel_een[0], regel_een[1], regel_een[2]]
 
 # This method binds the Recom class to the REST API, to parse specifically
 # requests in the format described below.

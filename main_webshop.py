@@ -233,7 +233,6 @@ VALUES (\'''''' + keys[i-1] + '''\', \'''' + values[i-1] + '''\');''')
 
 def fetch_query_properties(mongo_connection, postgres_connection):
     '''
-    Makes a dictionary with BUIDS as its key and the corresponding profile_id as value.
 
     :param mongo_connection: A list with mongoDB info
     :param buids_dict: A dictionary with

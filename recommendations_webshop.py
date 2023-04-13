@@ -107,8 +107,10 @@ def category_product(list_fetched, connection_list):
     count_vect = CountVectorizer()
 
     count_matrix = count_vect.fit_transform(dictionary_value)
+    print(count_matrix)
 
     cosine_sim = cosine_similarity(count_matrix, count_matrix)
+    print(cosine_sim)
 
     # Obtain the index of the product that matches the title
     idx = dictionary_key.index(prod)
@@ -116,6 +118,7 @@ def category_product(list_fetched, connection_list):
     # Get the pairwsie similarity scores of all products with that product
     # And convert it into a list of tuples as described above
     sim_scores = list(enumerate(cosine_sim[idx]))
+    print(sim_scores)
 
     # Sort the products based on the cosine similarity scores
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
@@ -158,7 +161,7 @@ def similair_product(profile_id, connection_list):
 
 
 postgres_lijst = ['localhost', 'webshop', 'postgres', 'pgadmin2', '5432']
-# print(similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+print(similair_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 # print(viewed_product('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 
 '''
@@ -212,4 +215,29 @@ def most_viewed_products(profile_id, connection_list):
     return my_keys
 
 
-print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+# print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
+
+# def vergelijkbare_prijs(profile_id, connection_list):
+#     print(viewed_product(profile_id, connection_list))
+#
+#     low_prijs = 100 - 50
+#     high_prijs = 100 + 50
+#     category = 'Eten & drinken'
+#
+#     conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
+#                                 connection_list[3], connection_list[4])
+#     try:
+#     cur = conn.cursor()
+#     cur.execute("SELECT * FROM products WHERE (price BETWEEN (%s) AND (%s)) AND category=(%s)", (low_prijs, high_prijs, category))
+#     products = cur.fetchall()
+#     print("The number of products: ", cur.rowcount)
+#     for product in products:
+#     print(product)
+#     cur.close()
+#     except (Exception, psycopg2.DatabaseError) as error:
+#     print(error)
+#         finally:
+#             if conn is not None:
+#                 conn.close()
+#
+# vergelijkbare_prijs("5a09ca9ca56ac6edb447bd76", postgres_lijst)

@@ -23,13 +23,25 @@ def create_similar_visitors_table(database, user, password, host, port):
             #print(product_id)
             cur.execute(f"INSERT INTO similar_visitors (visitor_id, product_id) VALUES (%s, %s)",
                         (str(visitor_id), str(product_id)))
-
+           
+    get_similar_products(conn, product_id, visitor_id)
+        
     # Commit the changes
     conn.commit()
     # Close the connections
     cur.close()
     conn.close()
-
+    
+def get_similar_products(conn, product_id, visitor_id):
+    cur = conn.cursor()
+    cur.execute(f"""
+        SELECT productId, count(*) FROM product_views WHERE visitorId
+        IN (SELECT visitorId from product_views WHERE productId = '{product_id}' and visitorId <> '{visitor_id}') 
+        GROUP by productId ORDER BY count(*) DESC LIMIT 5;
+    """)
+    similar_products = cur.fetchall()
+    cur.close()
+    return similar_products
 
 '''
 VRAAG:

@@ -217,27 +217,76 @@ def most_viewed_products(profile_id, connection_list):
 
 # print(most_viewed_products('5a09ca9ca56ac6edb447bd76', postgres_lijst))
 
-# def vergelijkbare_prijs(profile_id, connection_list):
-#     print(viewed_product(profile_id, connection_list))
-#
-#     low_prijs = 100 - 50
-#     high_prijs = 100 + 50
-#     category = 'Eten & drinken'
-#
-#     conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
-#                                 connection_list[3], connection_list[4])
-#     try:
-#     cur = conn.cursor()
-#     cur.execute("SELECT * FROM products WHERE (price BETWEEN (%s) AND (%s)) AND category=(%s)", (low_prijs, high_prijs, category))
-#     products = cur.fetchall()
-#     print("The number of products: ", cur.rowcount)
-#     for product in products:
-#     print(product)
-#     cur.close()
-#     except (Exception, psycopg2.DatabaseError) as error:
-#     print(error)
-#         finally:
-#             if conn is not None:
-#                 conn.close()
-#
-# vergelijkbare_prijs("5a09ca9ca56ac6edb447bd76", postgres_lijst)
+'''
+                                ****************** vergeijkbare_prijs ******************
+                                ****************** vergeijkbare_prijs ******************
+                                ****************** vergeijkbare_prijs ******************
+                                ****************** vergeijkbare_prijs ******************
+'''
+
+
+def same_prize(profile_id, connection_list):
+    conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
+                               connection_list[3], connection_list[4])
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM products WHERE _id='30131'")
+    main = cur.fetchone()
+    print(main)
+
+    low_prijs = main[1] - 50
+    high_prijs = main[1] + 50
+    category = main[4]
+    result = []
+
+
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM products WHERE (price BETWEEN (%s) AND (%s)) AND category=(%s)", (low_prijs, high_prijs, category))
+        products = cur.fetchmany(4)
+        print("The number of products: ", cur.rowcount)
+        for product in products:
+            print(product[0])
+            result.append(product[0])
+            print(result)
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+    return result
+
+'''
+                                ****************** same brand products ******************
+                                ****************** same brand products ******************
+                                ****************** same brand products ******************
+                                ****************** same brand products ******************
+'''
+
+def same_brand(profile_id, connection_list):
+    conn = connection_postgres(connection_list[0], connection_list[1], connection_list[2],
+                               connection_list[3], connection_list[4])
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM products WHERE _id='30131'")
+    main = cur.fetchone()
+
+    result = []
+    brand = main[10]
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM products WHERE brand =(%s)", (brand,))
+        products = cur.fetchmany(4)
+        print("The number of products: ", cur.rowcount)
+        for product in products:
+            result.append(product[0])
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+    return result

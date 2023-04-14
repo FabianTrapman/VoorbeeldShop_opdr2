@@ -247,7 +247,7 @@ def same_prize(profile_id, connection_list):
         products = cur.fetchmany(4)
         print("The number of products: ", cur.rowcount)
         for product in products:
-            print(product[0])
+            print(product)
             result.append(product[0])
             print(result)
         cur.close()
@@ -282,6 +282,7 @@ def same_brand(profile_id, connection_list):
         products = cur.fetchmany(4)
         print("The number of products: ", cur.rowcount)
         for product in products:
+            print(product)
             result.append(product[0])
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
@@ -290,3 +291,6 @@ def same_brand(profile_id, connection_list):
         if conn is not None:
             conn.close()
     return result
+
+# same_prize('1', postgres_lijst)
+same_brand('1', postgres_lijst)
